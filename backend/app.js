@@ -5,7 +5,7 @@ const rateLimit = require("express-rate-limit");
 const db = require("./database/databaseconfig");
 const router = require("./routes/router");
 
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) throw new Error("JWT_SECRET precisa ter pelo menos 32 caracteres.");
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32 || /^CHANGE_ME/i.test(process.env.JWT_SECRET)) throw new Error("JWT_SECRET precisa ser próprio, aleatório e ter pelo menos 32 caracteres.");
 const app = express();
 app.disable("x-powered-by");
 app.use(helmet());

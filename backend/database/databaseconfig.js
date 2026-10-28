@@ -1,11 +1,17 @@
 const { Pool } = require("pg");
 
+function requiredEnv(name) {
+   const value = process.env[name]?.trim();
+   if (!value || /^CHANGE_ME/i.test(value)) throw new Error(`${name} ausente ou ainda contém o valor de exemplo.`);
+   return value;
+}
+
 const db = new Pool({
-   host: process.env.DB_HOST || "127.0.0.1",
+   host: requiredEnv("DB_HOST"),
    port: Number(process.env.DB_PORT || 5432),
-   database: process.env.DB_NAME || "dw3_hospital",
-   user: process.env.DB_USER || "dw3_hospital",
-   password: process.env.DB_PASSWORD || "dw3_hospital",
+   database: requiredEnv("DB_NAME"),
+   user: requiredEnv("DB_USER"),
+   password: requiredEnv("DB_PASSWORD"),
    max: 10,
    idleTimeoutMillis: 30000,
    connectionTimeoutMillis: 5000,

@@ -17,7 +17,7 @@ Sistema de gestão hospitalar para o 2º trabalho de Desenvolvimento Web III. O 
    cp .env.example .env
    ```
 
-   Troque `POSTGRES_PASSWORD`, `DB_PASSWORD`, `JWT_SECRET`, `ADMIN_USERNAME` e `ADMIN_PASSWORD`. Use o mesmo valor em `POSTGRES_PASSWORD` e `DB_PASSWORD`. A chave JWT precisa ter pelo menos 32 caracteres; a senha administrativa deve ter pelo menos 12.
+   Troque `POSTGRES_PASSWORD`, `DB_PASSWORD`, `JWT_SECRET`, `ADMIN_USERNAME` e `ADMIN_PASSWORD`. Use o mesmo valor em `POSTGRES_PASSWORD` e `DB_PASSWORD`. A chave JWT precisa ter pelo menos 32 caracteres; a senha administrativa deve ter pelo menos 12. O projeto rejeita valores de exemplo que começam com `CHANGE_ME`. O container da interface recebe apenas `WEB_PORT` e `API_URL`; credenciais do banco e da API ficam restritas ao serviço da API.
 
 3. Inicie os três serviços:
 
@@ -67,4 +67,10 @@ npm install
 npm test
 ```
 
-O arquivo `docker-compose.yml` apenas configura os serviços; nenhum container é iniciado automaticamente pelos testes.
+O teste de integração valida login, proteção por token e CRUD completo com soft delete. Ele não inicia serviços; para executá-lo, API e banco precisam estar disponíveis e o usuário administrativo deve ter sido preparado:
+
+```bash
+RUN_INTEGRATION=1 npm run test:integration
+```
+
+Sem `RUN_INTEGRATION=1`, o comando de integração é marcado como ignorado. Os testes unitários rodam sem iniciar servidor, banco ou container.

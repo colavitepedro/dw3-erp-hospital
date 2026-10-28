@@ -43,10 +43,16 @@ async function GetByID(tipo, rawId) {
    return result.rows[0] || null;
 }
 
+async function pacienteAtivo(pacienteId) {
+   const result = await db.query("SELECT 1 FROM pacientes WHERE id = $1 AND removido = FALSE", [pacienteId]);
+   return result.rowCount > 0;
+}
+
 async function Insert(tipo, registro) {
    const c = tabela(tipo);
    const erros = validarRegistro(tipo, registro);
    if (erros.length) return { erros };
+   if (tipo === "consultas" && !(await pacienteAtivo(registro.paciente_id))) return { pacienteInativo: true };
    const values = c.campos.map((campo) => registro[campo] === undefined ? "" : registro[campo]);
    const placeholders = c.campos.map((_, i) => `$${i + 1}`).join(", ");
    const result = await db.query(`INSERT INTO ${c.tabela} (${c.campos.join(", ")}) VALUES (${placeholders}) RETURNING id`, values);
@@ -59,6 +65,7 @@ async function Update(tipo, rawId, registro) {
    const c = tabela(tipo);
    const erros = validarRegistro(tipo, registro);
    if (erros.length) return { erros };
+   if (tipo === "consultas" && !(await pacienteAtivo(registro.paciente_id))) return { pacienteInativo: true };
    const assignments = c.campos.map((field, i) => `${field} = $${i + 2}`).join(", ");
    const values = c.campos.map((campo) => registro[campo] === undefined ? "" : registro[campo]);
    const result = await db.query(`UPDATE ${c.tabela} SET ${assignments} WHERE id = $1 AND removido = FALSE`, [id, ...values]);

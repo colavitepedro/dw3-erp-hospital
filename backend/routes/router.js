@@ -22,6 +22,7 @@ for (const [tipo, singular] of [["pacientes", "Paciente"], ["consultas", "Consul
    router.post(`/insert${singular}`, async (req, res, next) => {
       try {
          const result = await crud.Insert(tipo, req.body);
+         if (result.pacienteInativo) return res.status(400).json({ status: "erro", message: "Selecione um paciente ativo para a consulta." });
          if (result.erros) return res.status(400).json({ status: "erro", erros: result.erros });
          return res.status(201).json({ status: "ok", registro: result });
       } catch (error) { return next(error); }
@@ -29,6 +30,7 @@ for (const [tipo, singular] of [["pacientes", "Paciente"], ["consultas", "Consul
    router.put(`/update${singular}/:id`, async (req, res, next) => {
       try {
          const result = await crud.Update(tipo, req.params.id, req.body);
+         if (result.pacienteInativo) return res.status(400).json({ status: "erro", message: "Selecione um paciente ativo para a consulta." });
          if (result.erro) return res.status(400).json({ status: "erro", message: "ID inválido." });
          if (result.erros) return res.status(400).json({ status: "erro", erros: result.erros });
          if (!result.linhasAfetadas) return res.status(404).json({ status: "erro", message: `${singular} não encontrado(a).` });
