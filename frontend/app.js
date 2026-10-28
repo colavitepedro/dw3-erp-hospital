@@ -1,0 +1,14 @@
+const express = require("express");
+const nunjucks = require("nunjucks");
+const path = require("node:path");
+const router = require("./routes/router");
+const app = express();
+const views = path.join(__dirname, "views");
+nunjucks.configure(views, { autoescape: true, express: app, noCache: process.env.NODE_ENV !== "production" });
+app.set("view engine", "njk");
+app.use(express.urlencoded({ extended: false, limit: "16kb" }));
+app.use(express.static(path.join(__dirname, "public"), { maxAge: process.env.NODE_ENV === "production" ? "1h" : 0 }));
+app.use("/", router);
+app.use((req, res) => res.status(404).render("error", { title: "Página não encontrada", message: "A página solicitada não existe." }));
+app.listen(Number(process.env.WEB_PORT || 40100), () => console.log(`Interface hospitalar disponível na porta ${process.env.WEB_PORT || 40100}.`));
+module.exports = app;

@@ -1,0 +1,22 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="app-shell" data-api-url="{{ apiUrl }}" data-modulo="{{ modulo }}">
+  <header class="site-header"><div class="site-header__inner">
+    <a class="brand" href="/pacientes"><span class="brand__name">Hospital</span><span class="brand__separator">/</span><span class="brand__product">Gestão</span></a>
+    <nav class="main-nav" aria-label="Navegação principal">
+      <a href="/pacientes" {% if modulo == "pacientes" %}aria-current="page"{% endif %}>Pacientes</a>
+      <a href="/consultas" {% if modulo == "consultas" %}aria-current="page"{% endif %}>Consultas</a>
+    </nav>
+    <div class="header-actions"><span class="header-username" id="usuario-atual"></span><button class="button button-secondary button-small" id="logout" type="button">Sair</button></div>
+  </div></header>
+  <main class="page-content">
+    <div class="page-heading"><div><p class="eyebrow">Módulo de saúde</p><h1>{{ title }}</h1><p class="muted">Cadastre e mantenha os registros do sistema hospitalar.</p></div><button class="button button-primary" id="novo-registro" type="button">Novo registro</button></div>
+    <div id="mensagem" class="notice" role="status" hidden></div>
+    <section class="content-card"><div class="card-heading"><div><h2>Registros ativos</h2><p class="muted">Itens marcados como removidos não aparecem nesta lista.</p></div><span class="count-badge" id="total-registros">0 registros</span></div>
+      <div class="table-wrap"><table><thead id="cabecalho-tabela"></thead><tbody id="corpo-tabela"><tr><td class="table-state">Carregando registros…</td></tr></tbody></table></div>
+    </section>
+  </main>
+</div>
+<div class="modal" id="modal-registro" hidden><div class="modal-backdrop" data-fechar></div><section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="titulo-modal"><button class="modal-close" type="button" aria-label="Fechar" data-fechar>×</button><h2 id="titulo-modal">Novo registro</h2><div id="erro-form" class="notice notice-error" role="alert" hidden></div><form id="form-registro" class="form-stack"><div id="campos-form"></div><div class="modal-actions"><button class="button button-secondary" type="button" data-fechar>Cancelar</button><button class="button button-primary" type="submit">Salvar</button></div></form></section></div>
+<script>window.API_URL={{ apiUrl | dump | safe }};</script><script src="/js/api.js" defer></script><script src="/js/cadastro.js" defer></script>
+{% endblock %}

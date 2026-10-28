@@ -1,0 +1,20 @@
+{% extends "layout.njk" %}
+{% block content %}
+<main class="login-shell">
+  <section class="login-panel" aria-labelledby="title">
+    <a class="brand" href="/login"><span class="brand__name">Hospital</span><span class="brand__separator">/</span><span class="brand__product">Gestão</span></a>
+    <p class="eyebrow">Sistema de gestão hospitalar</p>
+    <h1 id="title">Acesse sua conta</h1>
+    <p class="muted">Entre para consultar pacientes e organizar consultas.</p>
+    <div id="mensagem" class="notice notice-error" role="alert" hidden></div>
+    <form id="form-login" class="form-stack">
+      <label for="username">Usuário</label><input id="username" name="username" autocomplete="username" required maxlength="80">
+      <label for="password">Senha</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button class="button button-primary button-wide" type="submit">Entrar</button>
+    </form>
+    <p class="login-help">Acesso restrito à equipe autorizada.</p>
+  </section>
+</main>
+<script>window.API_URL={{ apiUrl | dump | safe }};</script>
+<script src="/js/login.js" defer></script>
+{% endblock %}
