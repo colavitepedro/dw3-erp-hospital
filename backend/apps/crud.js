@@ -4,12 +4,12 @@ const { validarId, validarRegistro } = require("../utils/validacao");
 const configuracoes = {
    pacientes: {
       tabela: "pacientes", campos: ["nome", "cpf", "data_nascimento", "telefone", "email"],
-      select: "id, nome, cpf, TO_CHAR(data_nascimento, 'YYYY-MM-DD') AS data_nascimento, telefone, email, removido",
+      select: "id, nome, cpf, TO_CHAR(data_nascimento, 'YYYY-MM-DD') AS data_nascimento, telefone, email, removido, criado_em",
       ordenar: "nome, id",
    },
    consultas: {
       tabela: "consultas", campos: ["paciente_id", "data_consulta", "especialidade", "medico", "valor", "observacoes"],
-      select: "c.id, c.paciente_id, p.nome AS paciente_nome, TO_CHAR(c.data_consulta, 'YYYY-MM-DD') AS data_consulta, c.especialidade, c.medico, c.valor, c.observacoes, c.removido",
+      select: "c.id, c.paciente_id, p.nome AS paciente_nome, TO_CHAR(c.data_consulta, 'YYYY-MM-DD') AS data_consulta, c.especialidade, c.medico, c.valor, c.observacoes, c.removido, c.criado_em",
       ordenar: "c.data_consulta DESC, c.id DESC",
    },
 };

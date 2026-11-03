@@ -41,7 +41,7 @@ Para encerrar os serviços: `docker compose down`. Para também apagar os dados 
 
 - **Pacientes:** nome, CPF, data de nascimento, telefone e e-mail.
 - **Consultas:** paciente, data, especialidade, profissional, valor decimal e observações.
-- Ambas as tabelas possuem `id` e `removido`. A exclusão lógica muda `removido` para `true`; listagens e buscas retornam apenas registros ativos. Consultas associadas a pacientes removidos não aparecem na listagem, mas seu histórico é preservado.
+- Ambas as tabelas possuem `id` e `removido`. A exclusão lógica muda `removido` para `true`; listagens e buscas retornam apenas os registros ativos. As APIs de listagem e consulta por ID retornam os campos de cada tabela, inclusive `criado_em`. Consultas associadas a pacientes removidos não aparecem na listagem, mas seu histórico é preservado.
 - A relação `consultas.paciente_id` tem chave estrangeira para `pacientes.id`. Não há exclusão física em cascata: o banco impede remover um paciente ainda referenciado, evitando apagar o histórico das consultas.
 - Rotas de cadastro exigem `Authorization: Bearer JWT`. O endpoint `POST /Login` emite JWT após validar as credenciais.
 
@@ -76,6 +76,6 @@ docker compose exec -T \
   api sh -c 'API_URL=http://127.0.0.1:${API_PORT:-40000} node --test backend/tests/api.integration.js'
 ```
 
-Além do fluxo de CRUD, a integração verifica CPF duplicado, chave estrangeira apontando para `pacientes.id`, rejeição de referência inexistente, bloqueio de exclusão física do paciente com consultas, preservação do histórico na exclusão lógica, consultas ocultas quando o paciente é removido, ausência de órfãos e a restrição de valores negativos diretamente no banco.
+Além do fluxo completo de CRUD das duas entidades e da presença de todos os campos em listagem/busca, a integração verifica CPF duplicado, chave estrangeira apontando para `pacientes.id`, rejeição de referência inexistente, bloqueio de exclusão física do paciente com consultas, preservação do histórico na exclusão lógica, consultas ocultas quando o paciente é removido, ausência de órfãos e a restrição de valores negativos diretamente no banco.
 
 Os testes unitários (`npm test`) rodam sem servidor ou banco. Se o teste de integração for chamado sem `RUN_INTEGRATION=1`, os cenários são ignorados.
