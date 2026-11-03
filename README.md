@@ -41,8 +41,9 @@ Para encerrar os serviços: `docker compose down`. Para também apagar os dados 
 
 - **Pacientes:** nome, CPF, data de nascimento, telefone e e-mail.
 - **Consultas:** paciente, data, especialidade, profissional, valor decimal e observações.
-- Ambas as tabelas possuem `id` e `removido`. A exclusão lógica muda `removido` para `true`; listagens e buscas retornam apenas registros ativos. Consultas associadas a pacientes removidos não aparecem na listagem.
-- Rotas de cadastro exigem `Authorization: Bearer <token>`. O endpoint `POST /Login` emite JWT após validar as credenciais.
+- Ambas as tabelas possuem `id` e `removido`. A exclusão lógica muda `removido` para `true`; listagens e buscas retornam apenas registros ativos. Consultas associadas a pacientes removidos não aparecem na listagem, mas seu histórico é preservado.
+- A relação `consultas.paciente_id` tem chave estrangeira para `pacientes.id`. Não há exclusão física em cascata: o banco impede remover um paciente ainda referenciado, evitando apagar o histórico das consultas.
+- Rotas de cadastro exigem `Authorization: Bearer JWT`. O endpoint `POST /Login` emite JWT após validar as credenciais.
 
 ## APIs
 
@@ -67,10 +68,14 @@ npm install
 npm test
 ```
 
-O teste de integração valida login, proteção por token e CRUD completo com soft delete. Ele não inicia serviços; para executá-lo, API e banco precisam estar disponíveis e o usuário administrativo deve ter sido preparado:
+O teste de integração valida login, proteção por token, CRUD e integridade entre pacientes e consultas. Ele precisa da API e do banco ativos e deve rodar dentro do container da API, que já recebe as variáveis de conexão:
 
 ```bash
-RUN_INTEGRATION=1 npm run test:integration
+docker compose exec -T \
+  -e RUN_INTEGRATION=1 \
+  api sh -c 'API_URL=http://127.0.0.1:${API_PORT:-40000} node --test backend/tests/api.integration.js'
 ```
 
-Sem `RUN_INTEGRATION=1`, o comando de integração é marcado como ignorado. Os testes unitários rodam sem iniciar servidor, banco ou container.
+Além do fluxo de CRUD, a integração verifica CPF duplicado, chave estrangeira apontando para `pacientes.id`, rejeição de referência inexistente, bloqueio de exclusão física do paciente com consultas, preservação do histórico na exclusão lógica, consultas ocultas quando o paciente é removido, ausência de órfãos e a restrição de valores negativos diretamente no banco.
+
+Os testes unitários (`npm test`) rodam sem servidor ou banco. Se o teste de integração for chamado sem `RUN_INTEGRATION=1`, os cenários são ignorados.
