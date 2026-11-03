@@ -29,6 +29,7 @@ test("API protege rotas e executa CRUD relacional com soft delete", { skip: !ena
   const login = await requisicao("/Login", null, "POST", { username, password });
   assert.equal(login.status, 200);
   assert.ok(login.data.token);
+  assert.equal((await requisicao("/Login", null, "POST", { username, password: `${password}-incorreta` })).status, 401);
   const token = login.data.token;
   const sufixo = Date.now().toString().slice(-11);
   let pacienteId;
@@ -42,8 +43,22 @@ test("API protege rotas e executa CRUD relacional com soft delete", { skip: !ena
     assert.equal(criadoPaciente.status, 201);
     pacienteId = criadoPaciente.data.registro.id;
 
+    const pacientesAtivos = await requisicao("/getAllPacientes", token);
+    const pacienteListado = pacientesAtivos.data.registro.find((item) => String(item.id) === String(pacienteId));
+    assert.ok(pacienteListado, "Paciente ativo deve aparecer na listagem.");
+    const camposPaciente = ["id", "nome", "cpf", "data_nascimento", "telefone", "email", "removido", "criado_em"].sort();
+    assert.deepEqual(Object.keys(pacienteListado).sort(), camposPaciente);
+
     const paciente = await requisicao(`/getPacienteByID/${pacienteId}`, token);
     assert.equal(paciente.status, 200);
+    assert.deepEqual(Object.keys(paciente.data.registro).sort(), camposPaciente);
+
+    const dadosPacienteAtualizados = {
+      nome: `Paciente teste ${sufixo}`, cpf: sufixo, data_nascimento: "1990-01-01",
+      telefone: "17999990001", email: `teste${sufixo}@example.com`,
+    };
+    assert.equal((await requisicao(`/updatePaciente/${pacienteId}`, token, "PUT", dadosPacienteAtualizados)).status, 200);
+    assert.equal((await requisicao(`/getPacienteByID/${pacienteId}`, token)).data.registro.telefone, "17999990001");
 
     const consultaDados = {
       paciente_id: pacienteId, data_consulta: new Date().toISOString().slice(0, 10),
@@ -52,17 +67,31 @@ test("API protege rotas e executa CRUD relacional com soft delete", { skip: !ena
     const criadaConsulta = await requisicao("/insertConsulta", token, "POST", consultaDados);
     assert.equal(criadaConsulta.status, 201);
     consultaId = criadaConsulta.data.registro.id;
+    const consultasAtivas = await requisicao("/getAllConsultas", token);
+    const consultaListada = consultasAtivas.data.registro.find((item) => String(item.id) === String(consultaId));
+    assert.ok(consultaListada, "Consulta ativa deve aparecer na listagem.");
+    const camposConsulta = ["id", "paciente_id", "paciente_nome", "data_consulta", "especialidade", "medico", "valor", "observacoes", "removido", "criado_em"].sort();
+    assert.deepEqual(Object.keys(consultaListada).sort(), camposConsulta);
 
     assert.equal((await requisicao("/getConsultaByID/999999999", token)).status, 404);
-    assert.equal((await requisicao(`/getConsultaByID/${consultaId}`, token)).status, 200);
+    const consulta = await requisicao(`/getConsultaByID/${consultaId}`, token);
+    assert.equal(consulta.status, 200);
+    assert.deepEqual(Object.keys(consulta.data.registro).sort(), camposConsulta);
     assert.equal((await requisicao(`/updateConsulta/${consultaId}`, token, "PUT", { ...consultaDados, valor: 130 })).status, 200);
+    const consultaAtualizada = await requisicao(`/getConsultaByID/${consultaId}`, token);
+    assert.equal(Number(consultaAtualizada.data.registro.valor), 130);
 
     assert.equal((await requisicao(`/deleteConsulta/${consultaId}`, token, "DELETE")).status, 200);
     consultaId = null;
     assert.equal((await requisicao(`/getConsultaByID/${criadaConsulta.data.registro.id}`, token)).status, 404);
+    const consultasAposRemocao = await requisicao("/getAllConsultas", token);
+    assert.equal(consultasAposRemocao.data.registro.some((item) => String(item.id) === String(criadaConsulta.data.registro.id)), false);
 
     const pacienteRemovido = await requisicao(`/deletePaciente/${pacienteId}`, token, "DELETE");
     assert.equal(pacienteRemovido.status, 200);
+    assert.equal((await requisicao(`/getPacienteByID/${pacienteId}`, token)).status, 404);
+    const pacientesAposRemocao = await requisicao("/getAllPacientes", token);
+    assert.equal(pacientesAposRemocao.data.registro.some((item) => String(item.id) === String(pacienteId)), false);
     pacienteId = null;
     const consultaAposRemocao = await requisicao("/insertConsulta", token, "POST", consultaDados);
     if (consultaAposRemocao.status === 201) {
